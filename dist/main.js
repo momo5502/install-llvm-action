@@ -23965,6 +23965,39 @@ $e2d7a47000ccff78$exports.evaluateVersions = $e2d7a47000ccff78$var$evaluateVersi
 
 
 
+const $905c6497285c5ebf$export$6c7ff7bde758ea58 = {
+    now: ()=>Date.now(),
+    sleep: (milliseconds)=>new Promise((resolve)=>setTimeout(resolve, milliseconds))
+};
+const $905c6497285c5ebf$export$6537044f586750f1 = {
+    deadlineMilliseconds: 3600000,
+    firstDelayMilliseconds: 15000,
+    maxDelayMilliseconds: 300000
+};
+function $905c6497285c5ebf$export$e5f905cd6003868e(error) {
+    if (error instanceof $e2d7a47000ccff78$exports.HTTPError) {
+        const status = error.httpStatusCode ?? 0;
+        return status === 408 || status === 429 || status >= 500;
+    }
+    return true;
+}
+async function $905c6497285c5ebf$export$4e4d130b0d0aaea4(attempt, options = $905c6497285c5ebf$export$6537044f586750f1, clock = $905c6497285c5ebf$export$6c7ff7bde758ea58) {
+    const deadline = clock.now() + options.deadlineMilliseconds;
+    let delay = options.firstDelayMilliseconds;
+    for(let number = 1;; number++)try {
+        return await attempt();
+    } catch (error) {
+        const remaining = deadline - clock.now();
+        if (!$905c6497285c5ebf$export$e5f905cd6003868e(error) || remaining <= 0) throw error;
+        const wait = Math.min(delay, remaining);
+        console.log(`Attempt ${number} failed (${error}), retrying in ${Math.round(wait / 1000)}s...`);
+        await clock.sleep(wait);
+        delay = Math.min(delay * 2, options.maxDelayMilliseconds);
+    }
+}
+
+
+
 var $73b874f14e970995$var$$parcel$__dirname = $bknAJ$path.resolve(__dirname, "..");
 const $73b874f14e970995$var$ASSETS_JSON = $bknAJ$fs.readFileSync($bknAJ$path.resolve($73b874f14e970995$var$$parcel$__dirname, "assets.json")).toString("utf-8");
 const $73b874f14e970995$var$ASSETS = JSON.parse($73b874f14e970995$var$ASSETS_JSON);
@@ -24040,7 +24073,7 @@ async function $73b874f14e970995$var$install(options) {
     $iL6dd.setOutput("version", specificVersion);
     console.log(`Installing LLVM and Clang ${options.version} (${specificVersion})...`);
     console.log(`Downloading and extracting '${url}'...`);
-    const archive = await $e2d7a47000ccff78$exports.downloadTool(url, "", options.auth ?? undefined);
+    const archive = await (0, $905c6497285c5ebf$export$4e4d130b0d0aaea4)(()=>$e2d7a47000ccff78$exports.downloadTool(url, "", options.auth ?? undefined));
     const directory = options.directory ?? "";
     let exit = -1;
     if (platform === "win32") {

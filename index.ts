@@ -6,6 +6,8 @@ import * as fs from "fs";
 import * as path from "path";
 import fsPromises from "fs/promises";
 
+import { retryUntilDeadline } from "./retry";
+
 const ASSETS_JSON = fs.readFileSync(path.resolve(__dirname, "assets.json")).toString("utf-8");
 const ASSETS: Record<string, Record<string, Record<string, string>>> = JSON.parse(ASSETS_JSON);
 
@@ -125,7 +127,7 @@ async function install(options: Options): Promise<void> {
 
   console.log(`Installing LLVM and Clang ${options.version} (${specificVersion})...`);
   console.log(`Downloading and extracting '${url}'...`);
-  const archive = await tc.downloadTool(url, "", options.auth ?? undefined);
+  const archive = await retryUntilDeadline(() => tc.downloadTool(url, "", options.auth ?? undefined));
 
   const directory = options.directory ?? "";
 

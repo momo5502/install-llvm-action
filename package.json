@@ -9,7 +9,8 @@
     "format": "prettier --write *.ts",
     "generate": "ts-node generate.ts",
     "build": "parcel build main.ts",
-    "test": "ts-node test.ts test"
+    "test": "ts-node test.ts test",
+    "test:retry": "ts-node retry.test.ts"
   },
   "dependencies": {
     "@actions/core": "~1.11.1",
